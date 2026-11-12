@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<MATLABApp schemaVersion='1.0.0' release='R2026b.0' minRelease='R2026b'>
+    <UIFigure name='UIFigure'>
+        <AutoResizeChildren>'off'</AutoResizeChildren>
+        <Name>'Microscopy Explorer | iGEM 2026'</Name>
+        <Position>[80 80 1280 800]</Position>
+        <Children>
+            <GridLayout name='RootGrid'>
+                <ColumnWidth>{240, '1x'}</ColumnWidth>
+                <RowHeight>{66, '1x', 28}</RowHeight>
+                <Padding>[16 16 16 16]</Padding>
+                <ColumnSpacing>16</ColumnSpacing>
+                <RowSpacing>12</RowSpacing>
+                <Children>
+                    <GridLayout name='HeadingGrid'>
+                        <ColumnWidth>{'1x'}</ColumnWidth>
+                        <RowHeight>{32, 24}</RowHeight>
+                        <Padding>[0 0 0 0]</Padding>
+                        <RowSpacing>4</RowSpacing>
+                        <Layout><Column>[1 2]</Column><Row>1</Row></Layout>
+                        <Children>
+                            <Label name='TitleLabel'>
+                                <Text>'How much reporter does each cell produce?'</Text>
+                                <FontSize>22</FontSize><FontWeight>'bold'</FontWeight>
+                                <Layout><Column>1</Column><Row>1</Row></Layout>
+                            </Label>
+                            <Label name='SubtitleLabel'>
+                                <Text>'Find cells in a reference channel. Measure expression in a separate reporter channel.'</Text>
+                                <FontSize>14</FontSize>
+                                <Layout><Column>1</Column><Row>2</Row></Layout>
+                            </Label>
+                        </Children>
+                    </GridLayout>
+                    <Panel name='ControlPanel'>
+                        <Title>'Explore the field'</Title><FontWeight>'bold'</FontWeight>
+                        <AutoResizeChildren>'off'</AutoResizeChildren>
+                        <Layout><Column>1</Column><Row>2</Row></Layout>
+                        <Children>
+                            <GridLayout name='ControlGrid'>
+                                <ColumnWidth>{'1x'}</ColumnWidth>
+                                <RowHeight>{22, 30, 22, 30, 40, 26, 32, 32, '1x', 115}</RowHeight>
+                                <Padding>[12 12 12 12]</Padding><RowSpacing>8</RowSpacing>
+                                <Scrollable>'on'</Scrollable>
+                                <Children>
+                                    <Label name='FieldLabel'><Text>'Cell density'</Text><Layout><Column>1</Column><Row>1</Row></Layout></Label>
+                                    <DropDown name='FieldDropDown'>
+                                        <Items>{'Sparse', 'Dense'}</Items><Value>'Dense'</Value>
+                                        <Tooltip>'Dense fields contain pairs of touching cells.'</Tooltip>
+                                        <ValueChangedFcn>selectionChanged</ValueChangedFcn>
+                                        <Layout><Column>1</Column><Row>2</Row></Layout>
+                                    </DropDown>
+                                    <Label name='ConditionLabel'><Text>'Reporter condition'</Text><Layout><Column>1</Column><Row>3</Row></Layout></Label>
+                                    <DropDown name='ConditionDropDown'>
+                                        <Items>{'Basal', 'Induced'}</Items><Value>'Induced'</Value>
+                                        <Tooltip>'Reference images stay the same when reporter expression changes.'</Tooltip>
+                                        <ValueChangedFcn>selectionChanged</ValueChangedFcn>
+                                        <Layout><Column>1</Column><Row>4</Row></Layout>
+                                    </DropDown>
+                                    <CheckBox name='SplitCheckBox'>
+                                        <Text>'Separate touching cells'</Text><Value>true</Value><WordWrap>'on'</WordWrap>
+                                        <Tooltip>'Apply distance-transform watershed after thresholding.'</Tooltip>
+                                        <ValueChangedFcn>selectionChanged</ValueChangedFcn>
+                                        <Layout><Column>1</Column><Row>5</Row></Layout>
+                                    </CheckBox>
+                                    <CheckBox name='OverlayCheckBox'>
+                                        <Text>'Show cell boundaries'</Text><Value>true</Value>
+                                        <ValueChangedFcn>overlayChanged</ValueChangedFcn>
+                                        <Layout><Column>1</Column><Row>6</Row></Layout>
+                                    </CheckBox>
+                                    <Button name='ResetButton'>
+                                        <Text>'Reset demo'</Text><ButtonPushedFcn>resetPushed</ButtonPushedFcn>
+                                        <Layout><Column>1</Column><Row>7</Row></Layout>
+                                    </Button>
+                                    <Button name='ExportButton'>
+                                        <Text>'Export measurements...'</Text><ButtonPushedFcn>exportPushed</ButtonPushedFcn>
+                                        <Tooltip>'Save the current per-cell measurements and analysis settings to CSV.'</Tooltip>
+                                        <Layout><Column>1</Column><Row>8</Row></Layout>
+                                    </Button>
+                                    <Label name='HintLabel'>
+                                        <Text>{'Turn separation off and compare the count.'; ''; 'Synthetic images.'; 'Saturated cells are omitted from expression summaries.'}</Text>
+                                        <WordWrap>'on'</WordWrap><VerticalAlignment>'top'</VerticalAlignment>
+                                        <Layout><Column>1</Column><Row>10</Row></Layout>
+                                    </Label>
+                                </Children>
+                            </GridLayout>
+                        </Children>
+                    </Panel>
+                    <GridLayout name='DisplayGrid'>
+                        <ColumnWidth>{'1.2x', '1x'}</ColumnWidth>
+                        <RowHeight>{72, '1x', 174}</RowHeight>
+                        <Padding>[0 0 0 0]</Padding><ColumnSpacing>12</ColumnSpacing><RowSpacing>12</RowSpacing>
+                        <Layout><Column>2</Column><Row>2</Row></Layout>
+                        <Children>
+                            <GridLayout name='SummaryGrid'>
+                                <ColumnWidth>{'1x', '1x', '1x'}</ColumnWidth><RowHeight>{'1x'}</RowHeight>
+                                <Padding>[8 0 8 0]</Padding>
+                                <Layout><Column>[1 2]</Column><Row>1</Row></Layout>
+                                <Children>
+                                    <Label name='CountLabel'><Text>'Cells'</Text><FontSize>19</FontSize><FontWeight>'bold'</FontWeight><WordWrap>'on'</WordWrap><Layout><Column>1</Column><Row>1</Row></Layout></Label>
+                                    <Label name='MedianLabel'><Text>'Median reporter'</Text><FontSize>17</FontSize><WordWrap>'on'</WordWrap><Layout><Column>2</Column><Row>1</Row></Layout></Label>
+                                    <Label name='QualityLabel'><Text>'Quality'</Text><FontSize>15</FontSize><WordWrap>'on'</WordWrap><Layout><Column>3</Column><Row>1</Row></Layout></Label>
+                                </Children>
+                            </GridLayout>
+                            <UIAxes name='ImageAxes'>
+                                <FontSize>12</FontSize><Title><String>'Reference channel and cell boundaries'</String></Title>
+                                <Layout><Column>1</Column><Row>2</Row></Layout>
+                            </UIAxes>
+                            <UIAxes name='DistributionAxes'>
+                                <FontSize>12</FontSize><Title><String>'Reporter expression per cell'</String></Title>
+                                <XLabel><String>'Background-corrected reporter (ADU)'</String></XLabel>
+                                <YLabel><String>'Cells'</String></YLabel>
+                                <Layout><Column>2</Column><Row>2</Row></Layout>
+                            </UIAxes>
+                            <Table name='CellTable'>
+                                <ColumnEditable>false</ColumnEditable><ColumnSortable>true</ColumnSortable>
+                                <ColumnWidth>'1x'</ColumnWidth><RowName>{}</RowName>
+                                <FontSize>12</FontSize>
+                                <Layout><Column>[1 2]</Column><Row>3</Row></Layout>
+                            </Table>
+                        </Children>
+                    </GridLayout>
+                    <Label name='StatusLabel'>
+                        <Text>'Loading bundled images...'</Text><FontSize>12</FontSize>
+                        <Layout><Column>[1 2]</Column><Row>3</Row></Layout>
+                    </Label>
+                </Children>
+            </GridLayout>
+        </Children>
+    </UIFigure>
+    <AppDetails>
+        <Name>MicroscopyExplorer</Name>
+        <Version>1.0</Version>
+    </AppDetails>
+    <InternalData>
+        <AppId>de2ea148-ff2f-f7c2-6ecf-a0deacb6a2b0</AppId>
+    </InternalData>
+    <RunConfiguration><StartupFcn>startupFcn</StartupFcn></RunConfiguration>
+    <Thumbnail autoCapture='true'></Thumbnail>
+</MATLABApp>

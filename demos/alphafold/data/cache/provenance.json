@@ -1,0 +1,14 @@
+{
+  "accession": "A0A0K8P6T7",
+  "modelId": "AF-A0A0K8P6T7-F1",
+  "modelVersion": 6,
+  "metadataUrl": "https://alphafold.ebi.ac.uk/api/prediction/A0A0K8P6T7",
+  "structureUrl": "https://alphafold.ebi.ac.uk/files/AF-A0A0K8P6T7-F1-model_v6.pdb",
+  "retrievedUTC": "2026-11-12T19:16:37.314786+00:00",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "predictionProvider": "AlphaFold Protein Structure Database",
+  "pdbSHA256": "e1cb5aefb9a0ab435e02c3676820cbee4f10c0008247d8ff0ce81fa45dd72815",
+  "metadataSHA256": "97f3da99248e8e2e4835b709979eece1c1605137f53c60c9f3b7c8254066be57",
+  "residueCount": 290
+}

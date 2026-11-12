@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fluorescent biosensor calibration</title>
+<style>
+    :root { color-scheme: light; --ink:#173247; --muted:#516572; --line:#d6dfe4; --canvas:#f4f7f9; --a:#0072bd; --b:#d95319; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,Helvetica,sans-serif; color:var(--ink); background:var(--canvas); }
+    button,select,input { font:inherit; }
+    button,select { min-height:40px; }
+    button { border:1px solid #8d9da7; border-radius:5px; background:white; color:var(--ink); padding:8px 12px; cursor:pointer; }
+    button:hover { background:#edf3f6; }
+    button.primary { background:#006aaf; border-color:#006aaf; color:white; }
+    button.primary:hover { background:#00558c; }
+    button:disabled,select:disabled { opacity:.55; cursor:wait; }
+    :focus-visible { outline:3px solid #1767a0; outline-offset:3px; }
+    .app { display:grid; grid-template-columns:240px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) 30px; height:100vh; }
+    .header { grid-column:1 / -1; padding:18px 24px 16px; background:white; border-bottom:1px solid var(--line); }
+    .eyebrow { margin:0 0 5px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    h1 { margin:0; font-size:25px; font-weight:600; }
+    .subtitle { margin:7px 0 0; color:var(--muted); font-size:14px; line-height:1.4; }
+    .sidebar { padding:22px 18px; background:white; border-right:1px solid var(--line); overflow-y:auto; display:flex; flex-direction:column; gap:20px; }
+    .control { display:flex; flex-direction:column; gap:8px; }
+    .control label,.control-title { font-size:14px; font-weight:600; }
+    select { width:100%; border:1px solid #9caab2; border-radius:4px; color:var(--ink); background:white; padding:8px; }
+    .hint { color:var(--muted); line-height:1.5; font-size:12px; margin:0; }
+    .check { display:flex; gap:9px; align-items:center; font-size:14px; line-height:1.4; }
+    input[type=checkbox] { width:18px; height:18px; accent-color:#006aaf; }
+    .actions { display:flex; flex-direction:column; gap:9px; }
+    .lesson { margin-top:auto; padding-top:18px; border-top:1px solid var(--line); }
+    .lesson strong { display:block; margin-bottom:7px; font-size:14px; }
+    .main { overflow:auto; min-width:0; padding:20px; display:flex; flex-direction:column; gap:15px; }
+    .chart-panel { background:white; border:1px solid var(--line); border-radius:7px; padding:16px 18px 12px; }
+    .chart-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+    h2 { font-size:16px; margin:0; font-weight:600; }
+    .legend { display:flex; flex-wrap:wrap; gap:17px; font-size:12px; color:var(--muted); }
+    .legend-item { display:flex; align-items:center; gap:7px; }
+    .swatch { display:inline-block; width:22px; height:3px; background:var(--a); }
+    .swatch.b { background:var(--b); }
+    #chart { display:block; width:100%; min-height:285px; height:clamp(285px,40vh,420px); }
+    .chart-note { margin:0; font-size:11px; color:var(--muted); line-height:1.4; }
+    .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .result-card { background:white; border:1px solid var(--line); border-top:4px solid var(--sensor); border-radius:6px; padding:15px 16px; }
+    .result-card.active { box-shadow:0 0 0 2px var(--sensor); }
+    .card-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+    .sensor-name { font-weight:600; font-size:14px; }
+    .signal { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .estimate { min-height:49px; display:flex; align-items:center; font-size:23px; font-weight:600; line-height:1.15; margin:3px 0 8px; }
+    .badge { display:inline-block; border-radius:4px; padding:4px 7px; font-size:11px; color:#704710; background:#fff3d6; line-height:1.4; }
+    .badge.good { color:#235b3e; background:#e8f4ec; }
+    .interval { font-size:12px; margin:10px 0 5px; line-height:1.5; }
+    .explanation { font-size:12px; color:var(--muted); line-height:1.5; margin:0; }
+    .message { min-height:24px; padding:3px 0; margin:0; color:var(--muted); font-size:13px; line-height:1.4; }
+    .message.error { color:#9a2c27; }
+    .footer { grid-column:1 / -1; display:flex; justify-content:space-between; gap:12px; align-items:center; padding:0 20px; border-top:1px solid var(--line); background:white; font-size:11px; color:var(--muted); }
+    @media (max-height:720px) { .header { padding-top:13px; padding-bottom:12px; } h1 { font-size:23px; } .main { padding:14px; } }
+</style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <p class="eyebrow">iGEM • Synthetic measurement study</p>
+        <h1>Fluorescent biosensor calibration</h1>
+        <p class="subtitle">A bright response does not always give a precise concentration. Compare two sensors measuring the same sample.</p>
+    </header>
+    <aside class="sidebar" aria-label="Analysis controls">
+        <div class="control">
+            <label for="sample">Prepared unknown</label>
+            <select id="sample" disabled><option>Loading samples…</option></select>
+            <p class="hint">Each sensor has its own replicate fluorescence measurements of this sample.</p>
+        </div>
+        <div class="control">
+            <label for="sensor">Emphasize a sensor</label>
+            <select id="sensor" disabled><option value="A">Sensor A: early response</option><option value="B">Sensor B: broader range</option></select>
+        </div>
+        <label class="check"><input id="bands" type="checkbox" checked>Show 95% fit bands</label>
+        <div class="actions">
+            <button id="reset" type="button" disabled>Reset comparison</button>
+            <button id="export" type="button" class="primary" disabled>Export results as CSV</button>
+        </div>
+        <div class="lesson">
+            <strong>Choose the useful range</strong>
+            <p class="hint">Near a plateau, small fluorescence errors become large concentration errors. An interval can be unbounded.</p>
+        </div>
+    </aside>
+    <main class="main">
+        <section class="chart-panel" aria-labelledby="chart-title">
+            <div class="chart-heading">
+                <h2 id="chart-title">From fluorescence to concentration</h2>
+                <div class="legend" aria-label="Chart legend">
+                    <span class="legend-item"><span class="swatch"></span>Sensor A</span>
+                    <span class="legend-item"><span class="swatch b"></span>Sensor B</span>
+                </div>
+            </div>
+            <svg id="chart" role="img" aria-label="Hill calibration curves, replicate standards, uncertainty bands, and unknown sample measurements"></svg>
+            <p class="chart-note">Hollow points: standards. Filled points and dashed guides: unknown means. Blank controls are included in the fit; positive concentrations use a log axis.</p>
+        </section>
+        <section id="cards" class="cards" aria-label="Independent sensor estimates"></section>
+        <p id="message" class="message" role="status" aria-live="polite">Connecting to the analysis…</p>
+    </main>
+    <footer class="footer"><span>All measurements are synthetic. EC50 is not a detection limit.</span><span id="footnote">Prepared calibration study</span></footer>
+</div>
+<script>
+/* Observable UI state; scientific results arrive from MATLAB. */
+class Observable {
+    constructor(value) { this._value=value; this._listeners=new Set(); }
+    get value() { return this._value; }
+    set value(value) { if (this._value===value) return; this._value=value; this._listeners.forEach(fn=>fn(value)); }
+    subscribe(fn) { this._listeners.add(fn); fn(this._value); return ()=>this._listeners.delete(fn); }
+}
+class ResultModel { constructor() { this.state=new Observable(null); } }
+class ExplorerViewModel {
+    constructor(model,bridge) {
+        this.model=model; this.bridge=bridge; this.sequence=0;
+        this.busy=new Observable(true); this.message=new Observable('Connecting to the analysis…');
+        this.error=new Observable(false); this.showBands=new Observable(true);
+    }
+    request(event,payload={}) {
+        this.busy.value=true; this.error.value=false;
+        this.message.value=event==='ExportResults'?'Choose a CSV destination…':'Updating the comparison…';
+        this.bridge.sendEventToMATLAB(event,{...payload,requestId:++this.sequence});
+    }
+    analyze(sampleID,sensorID) { this.request('Analyze',{sampleID,sensorID}); }
+    accept(state) {
+        if (Number(state.requestId)<this.sequence) return;
+        this.sequence=Number(state.requestId); this.model.state.value=state;
+        this.busy.value=false; this.error.value=false;
+        this.message.value=`Ready · ${state.sampleID}. Compare concentration intervals as well as signal brightness.`;
+    }
+    fail(error) {
+        if (Number(error.requestId)<this.sequence && Number(error.requestId)!==0) return;
+        this.busy.value=false; this.error.value=true;
+        this.message.value=String(error.message||'The request failed. Reset the comparison and try again.');
+    }
+}
+/* The view owns DOM/SVG operations and formatting only. */
+class ExplorerView {
+    constructor(vm) {
+        this.vm=vm; this.unsubscribers=[];
+        this.sample=document.getElementById('sample'); this.sensor=document.getElementById('sensor');
+        this.bands=document.getElementById('bands'); this.reset=document.getElementById('reset');
+        this.exportButton=document.getElementById('export'); this.chart=document.getElementById('chart');
+        this.cards=document.getElementById('cards'); this.message=document.getElementById('message');
+        this.sample.addEventListener('change',()=>vm.analyze(this.sample.value,this.sensor.value));
+        this.sensor.addEventListener('change',()=>vm.analyze(this.sample.value,this.sensor.value));
+        this.bands.addEventListener('change',()=>vm.showBands.value=this.bands.checked);
+        this.reset.addEventListener('click',()=>{ vm.showBands.value=true; this.bands.checked=true; vm.analyze('U1','A'); });
+        this.exportButton.addEventListener('click',()=>vm.request('ExportResults'));
+        this.unsubscribers.push(vm.model.state.subscribe(state=>{ if(state) this.render(state); }));
+        this.unsubscribers.push(vm.busy.subscribe(busy=>[this.sample,this.sensor,this.reset,this.exportButton].forEach(control=>control.disabled=busy)));
+        this.unsubscribers.push(vm.message.subscribe(text=>this.message.textContent=text));
+        this.unsubscribers.push(vm.error.subscribe(error=>this.message.classList.toggle('error',error)));
+        this.unsubscribers.push(vm.showBands.subscribe(()=>this.renderChart(vm.model.state.value)));
+        this.observer=new ResizeObserver(()=>this.renderChart(vm.model.state.value)); this.observer.observe(this.chart);
+    }
+    render(state) {
+        if(this.sample.options.length!==state.sampleIDs.length || this.sample.options[0].value!==state.sampleIDs[0]) {
+            this.sample.replaceChildren();
+            Array.from(state.sampleIDs).forEach((id,index)=>{
+                const option=document.createElement('option'); option.value=String(id); option.textContent=String(state.sampleLabels[index]); this.sample.append(option);
+            });
+        }
+        this.sample.value=String(state.sampleID); this.sensor.value=String(state.activeSensor);
+        document.getElementById('footnote').textContent=`${state.bootstrapCount} seeded bootstrap fits per sensor · Data v${state.dataVersion}`;
+        this.renderCards(state); this.renderChart(state);
+    }
+    renderCards(state) {
+        this.cards.replaceChildren();
+        Array.from(state.results).forEach(result=>{
+            const card=document.createElement('article'); card.className='result-card';
+            card.style.setProperty('--sensor',result.id==='A'?'#0072bd':'#d95319'); card.classList.toggle('active',result.id===state.activeSensor);
+            const top=document.createElement('div'); top.className='card-top';
+            top.append(this.text('span','sensor-name',`Sensor ${result.id}`),this.text('span','signal',`${Number(result.meanSignal).toFixed(0)} RFU`));
+            card.append(top,this.text('div','estimate',result.concentrationText),this.text('span',`badge${result.quantifiable?' good':''}`,result.status),
+                this.text('p','interval',result.intervalText),this.text('p','explanation',result.explanation));
+            this.cards.append(card);
+        });
+    }
+    text(tag,className,value) { const node=document.createElement(tag); node.className=className; node.textContent=String(value); return node; }
+    svgNode(tag,attributes={},text) {
+        const node=document.createElementNS('http://www.w3.org/2000/svg',tag);
+        Object.entries(attributes).forEach(([name,value])=>node.setAttribute(name,String(value)));
+        if(text!==undefined) node.textContent=String(text); return node;
+    }
+    renderChart(state) {
+        if(!state) return;
+        const width=Math.max(480,this.chart.clientWidth),height=Math.max(285,this.chart.clientHeight);
+        const pad={left:62,right:22,top:24,bottom:48},plotWidth=width-pad.left-pad.right,plotHeight=height-pad.top-pad.bottom;
+        const curves=Array.from(state.curves),results=Array.from(state.results);
+        const xMin=Number(state.xRange[0]),xMax=Number(state.xRange[1]);
+        const maxSignal=Math.max(...curves.flatMap(curve=>Array.from(curve.pointY)),...results.map(row=>Number(row.meanSignal)));
+        const yMax=Math.ceil(maxSignal*1.06/500)*500;
+        const x=value=>pad.left+(Math.log10(value)-Math.log10(xMin))/(Math.log10(xMax)-Math.log10(xMin))*plotWidth;
+        const y=value=>pad.top+(1-value/yMax)*plotHeight;
+        this.chart.setAttribute('viewBox',`0 0 ${width} ${height}`); this.chart.replaceChildren();
+        this.chart.append(this.svgNode('title',{},`Calibration and ${state.sampleID} measurements`));
+        const definitions=this.svgNode('defs'); const clip=this.svgNode('clipPath',{id:'plot-clip'});
+        clip.append(this.svgNode('rect',{x:pad.left,y:pad.top,width:plotWidth,height:plotHeight})); definitions.append(clip); this.chart.append(definitions);
+        for(let tick=0;tick<=yMax;tick+=500) {
+            this.chart.append(this.svgNode('line',{x1:pad.left,y1:y(tick),x2:width-pad.right,y2:y(tick),stroke:'#e3e9ed'}));
+            this.chart.append(this.svgNode('text',{x:pad.left-10,y:y(tick)+4,'text-anchor':'end','font-size':11,fill:'#516572'},tick));
+        }
+        [0.25,1,4,16,64,128].filter(tick=>tick>=xMin&&tick<=xMax).forEach(tick=>{
+            this.chart.append(this.svgNode('line',{x1:x(tick),y1:pad.top,x2:x(tick),y2:height-pad.bottom,stroke:'#edf1f3'}));
+            this.chart.append(this.svgNode('text',{x:x(tick),y:height-pad.bottom+19,'text-anchor':'middle','font-size':11,fill:'#516572'},tick));
+        });
+        const plot=this.svgNode('g',{'clip-path':'url(#plot-clip)'}); this.chart.append(plot);
+        const linePath=(xs,ys)=>Array.from(xs).map((value,index)=>`${index?'L':'M'}${x(Number(value)).toFixed(2)},${y(Number(ys[index])).toFixed(2)}`).join(' ');
+        curves.forEach(curve=>{
+            const color=curve.id==='A'?'#0072bd':'#d95319',active=curve.id===state.activeSensor;
+            if(this.vm.showBands.value) {
+                const upper=linePath(curve.x,curve.upper),lower=linePath(Array.from(curve.x).reverse(),Array.from(curve.lower).reverse()).replace(/^M/,'L');
+                plot.append(this.svgNode('path',{d:`${upper} ${lower} Z`,fill:color,'fill-opacity':active?.16:.09,stroke:'none'}));
+            }
+            Array.from(curve.pointX).forEach((value,index)=>{
+                const point=this.svgNode('circle',{cx:x(Number(value)),cy:y(Number(curve.pointY[index])),r:2.8,fill:'white',stroke:color,'stroke-width':1,opacity:active?.65:.35});
+                point.append(this.svgNode('title',{},`${Number(value)} µM; ${Number(curve.pointY[index]).toFixed(1)} RFU`)); plot.append(point);
+            });
+            plot.append(this.svgNode('path',{d:linePath(curve.x,curve.y),fill:'none',stroke:color,'stroke-width':active?3.3:2,'stroke-opacity':active?1:.6}));
+        });
+        results.forEach(result=>{
+            const color=result.id==='A'?'#0072bd':'#d95319',active=result.id===state.activeSensor;
+            const estimate=Number(result.estimate),hasPoint=Boolean(result.hasEstimate)&&estimate>=xMin&&estimate<=xMax;
+            plot.append(this.svgNode('line',{x1:pad.left,y1:y(Number(result.meanSignal)),x2:hasPoint?x(estimate):width-pad.right,y2:y(Number(result.meanSignal)),stroke:color,'stroke-dasharray':'5 4','stroke-width':active?1.8:1.1,opacity:active?1:.65}));
+            if(hasPoint) {
+                plot.append(this.svgNode('line',{x1:x(estimate),y1:y(Number(result.meanSignal)),x2:x(estimate),y2:height-pad.bottom,stroke:color,'stroke-dasharray':'5 4','stroke-width':1.2}));
+                const point=this.svgNode('circle',{cx:x(estimate),cy:y(Number(result.meanSignal)),r:active?6:4.5,fill:color,stroke:'white','stroke-width':2});
+                point.append(this.svgNode('title',{},`${state.sampleID}, Sensor ${result.id}: ${result.status}`)); plot.append(point);
+            }
+        });
+        this.chart.append(this.svgNode('text',{x:pad.left+plotWidth/2,y:height-8,'text-anchor':'middle','font-size':12,fill:'#173247'},'Concentration (µM, log scale)'));
+        this.chart.append(this.svgNode('text',{x:17,y:pad.top+plotHeight/2,transform:`rotate(-90 17 ${pad.top+plotHeight/2})`,'text-anchor':'middle','font-size':12,fill:'#173247'},'Fluorescence (RFU)'));
+    }
+    destroy() { this.observer.disconnect(); this.unsubscribers.forEach(unsubscribe=>unsubscribe()); }
+}
+/* uihtml calls setup only after its bridge exists. */
+function setup(htmlComponent) {
+    if(window.biosensorView) window.biosensorView.destroy();
+    const model=new ResultModel(),vm=new ExplorerViewModel(model,htmlComponent),view=new ExplorerView(vm);
+    window.biosensorView=view;
+    htmlComponent.addEventListener('State',event=>{
+        try { vm.accept(event.Data); htmlComponent.sendEventToMATLAB('Rendered',{requestId:Number(event.Data.requestId)}); }
+        catch(error) { vm.fail({requestId:vm.sequence,message:`The result could not be displayed: ${error.message}`}); }
+    });
+    htmlComponent.addEventListener('Error',event=>vm.fail(event.Data));
+    htmlComponent.addEventListener('ExportComplete',event=>{
+        if(Number(event.Data.requestId)<vm.sequence) return;
+        vm.busy.value=false; vm.message.value=event.Data.saved?'CSV saved with the displayed sample, both sensors, and uncertainty status.':'Export cancelled; the analysis is unchanged.';
+    });
+    window.addEventListener('beforeunload',()=>view.destroy(),{once:true});
+    vm.request('Initialize');
+}
+</script>
+</body>
+</html>
