@@ -1,6 +1,6 @@
 # Calibrate a fluorescent biosensor
 
-[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/biosensor/great-demo/demo.m)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/biosensor/app/demo.m)
 
 Compare two synthetic fluorescent sensors measuring the same unknown sample. A MATLAB app shows why a bright, nearly saturated response can give a less useful concentration estimate than a response within the calibration range. The accompanying Live Script exposes the same fitting and inference functions.
 
@@ -12,7 +12,7 @@ The badge opens the launcher. Press **Run** to open the app. MATLAB Online requi
 
 | File or directory | Purpose |
 |---|---|
-| [great-demo/demo.m](great-demo/demo.m) | Launch the completed app. |
+| [app/demo.m](app/demo.m) | Launch the completed app. |
 | [BiosensorExplorer.m](BiosensorExplorer.m) | App launch, sample selections, and CSV export. |
 | [web/biosensor.html](web/biosensor.html) | Self-contained HTML, CSS, JavaScript, and SVG interface. |
 | [walkthrough/biosensorCalibration.m](walkthrough/biosensorCalibration.m) | Plain-text Live Script: standards, fitting, inverse estimates, and uncertainty. |
@@ -41,7 +41,7 @@ The badge opens the launcher. Press **Run** to open the app. MATLAB Online requi
 ## Setup Instructions
 
 1. Use MATLAB R2026b. No additional toolboxes are required.
-2. Open `great-demo/demo.m` and press **Run**. The launcher adds the demo folder to the path and loads the bundled data.
+2. Open `app/demo.m` and press **Run**. The launcher adds the demo folder to the path and loads the bundled data.
 3. For the walkthrough, open `walkthrough/biosensorCalibration.m`. Run it from its folder, or allow MATLAB to change to that folder when prompted.
 4. To regenerate the complete dataset, add the demo folder to the path and run `biosensor.generateData`. This rebuilds the measurements, CSV files, and bootstrap fits using fixed local random streams. Regeneration is preparation work; it is not required when opening the app.
 

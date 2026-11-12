@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Virtual Lab</title>
+<style>
+    :root { color-scheme:light; --ink:#163047; --muted:#5b6e7b; --line:#d8e1e7; --paper:#fff; --canvas:#f3f6f8; --blue:#176cac; --teal:#14746f; --amber:#a46119; --purple:#7556a5; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--canvas); color:var(--ink); }
+    button,select { font:inherit; font-size:14px; }
+    button { min-height:39px; padding:9px 11px; border:1px solid #a2b0ba; border-radius:5px; background:white; color:var(--ink); cursor:pointer; text-align:left; }
+    button:hover { background:#edf3f7; }
+    button.primary { background:var(--blue); color:white; border-color:var(--blue); }
+    button.run { background:var(--teal); color:white; border-color:var(--teal); }
+    button:disabled,select:disabled { opacity:.45; cursor:default; }
+    :focus-visible { outline:3px solid #2780b9; outline-offset:3px; }
+    select { min-height:39px; width:100%; border:1px solid #a2b0ba; border-radius:4px; padding:7px; color:var(--ink); background:white; }
+    .app { height:100vh; display:grid; grid-template-columns:240px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) 28px; }
+    .header { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; gap:24px; padding:16px 22px; background:white; border-bottom:1px solid var(--line); }
+    h1 { font-size:26px; margin:0 0 5px; font-weight:600; letter-spacing:-.02em; }
+    .subtitle { font-size:13px; margin:0; color:var(--muted); line-height:1.4; }
+    .engine { border:1px solid #b7d6d1; background:#eef8f5; color:#235f59; font-size:12px; padding:8px 11px; border-radius:20px; white-space:nowrap; }
+    .sidebar { display:flex; flex-direction:column; gap:16px; padding:18px; overflow:auto; background:white; border-right:1px solid var(--line); }
+    .control { display:flex; flex-direction:column; gap:8px; }
+    .control label,.section-label { font-size:13px; font-weight:600; }
+    .hint { font-size:12px; line-height:1.5; color:var(--muted); margin:0; }
+    .action-group { display:flex; flex-direction:column; gap:9px; }
+    .step { display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; border-radius:50%; background:#ffffff28; margin-right:7px; font-size:11px; }
+    .budget { padding:14px; border-radius:6px; background:#f1f6fa; }
+    .budget-number { font-size:29px; font-weight:600; line-height:1; }
+    .budget-label { color:var(--muted); font-size:12px; margin-left:4px; }
+    .budget-bar { height:6px; background:#dce6ec; border-radius:4px; overflow:hidden; margin:12px 0 8px; }
+    .budget-fill { width:0; height:100%; background:var(--blue); transition:width .2s; }
+    .sidebar-bottom { margin-top:auto; display:flex; flex-direction:column; gap:9px; padding-top:12px; border-top:1px solid var(--line); }
+    .main { padding:16px; overflow:auto; min-width:0; display:flex; flex-direction:column; gap:13px; }
+    .metrics { display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:12px; }
+    .metric { padding:13px 15px; background:white; border:1px solid var(--line); border-radius:6px; }
+    .metric-label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.045em; }
+    .metric-value { margin-top:5px; font-size:23px; line-height:1.15; font-weight:600; }
+    .metric-value small { font-size:12px; font-weight:400; color:var(--muted); }
+    .metric-detail { font-size:11px; color:var(--muted); margin-top:4px; line-height:1.3; }
+    .plots { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:13px; }
+    .panel { background:white; border:1px solid var(--line); border-radius:6px; min-width:0; }
+    .panel-head { padding:13px 14px 8px; display:flex; gap:8px; justify-content:space-between; align-items:center; }
+    h2 { font-size:14px; font-weight:600; margin:0; }
+    .metric-picker { width:auto; max-width:155px; min-height:30px; font-size:11px; padding:4px; }
+    .plot { display:block; width:100%; height:268px; }
+    .caption { padding:0 14px 11px; font-size:10.5px; color:var(--muted); line-height:1.45; min-height:41px; }
+    .map-detail { color:var(--ink); min-height:16px; }
+    .lower { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(0,1fr); gap:13px; }
+    .pill { border-radius:4px; padding:4px 7px; background:#eef3f7; font-size:10px; color:var(--muted); white-space:nowrap; }
+    .proposal-wrap { overflow:auto; padding:0 13px 10px; }
+    table { width:100%; border-collapse:collapse; font-size:11px; }
+    th { text-align:left; font-size:10px; color:var(--muted); font-weight:600; border-bottom:1px solid var(--line); padding:7px 5px; line-height:1.35; }
+    td { border-bottom:1px solid #edf1f4; padding:8px 5px; white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
+    .subvalue { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+    .empty { font-size:12px; color:var(--muted); padding:22px 8px; text-align:center; line-height:1.5; }
+    .proposal-note { padding:0 14px 12px; color:var(--muted); font-size:10.5px; line-height:1.4; }
+    .events { list-style:none; margin:0; padding:0 13px 10px; max-height:184px; overflow:auto; }
+    .events li { display:grid; grid-template-columns:24px minmax(0,1fr); gap:7px; padding:8px 0; border-bottom:1px solid #edf1f4; font-size:11px; line-height:1.45; }
+    .events li:last-child { border-bottom:0; }
+    .event-sequence { display:flex; justify-content:center; align-items:flex-start; padding-top:1px; color:#7b8993; font-size:10px; }
+    .message { margin:0; min-height:18px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .message.error { color:#963428; }
+    .banner { display:none; border-left:3px solid #c2862c; background:#fff5e3; padding:9px 12px; font-size:12px; line-height:1.5; color:#78501a; }
+    .banner.visible { display:block; }
+    .footer { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; gap:10px; background:white; border-top:1px solid var(--line); padding:0 20px; color:var(--muted); font-size:10px; }
+    @media (max-width:1100px) { .main { padding:12px; gap:11px; } .plots,.lower { gap:11px; } .metric { padding:11px; } .metric-value { font-size:21px; } .header { padding:13px 18px; } .plot { height:250px; } .lower { grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); } }
+    @media (max-height:740px) { .header { padding-top:11px; padding-bottom:11px; } h1 { font-size:24px; } .plot { height:240px; } }
+</style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div><h1>Virtual Lab</h1><p class="subtitle">Choose experiments for strong reporter signal and a minimum growth target.</p></div>
+        <div class="engine">SimBiology experiment engine</div>
+    </header>
+    <aside class="sidebar" aria-label="Experiment controls">
+        <div class="control">
+            <label for="growth-target">Minimum relative growth</label>
+            <select id="growth-target" disabled><option value="0.8">80% minimum growth</option><option value="0.9">90% minimum growth</option></select>
+            <p class="hint">Changing the requirement keeps observations and budget, and clears the old proposal.</p>
+        </div>
+        <div class="action-group">
+            <button id="suggest" class="primary" type="button" disabled><span class="step">1</span>Suggest next batch</button>
+            <button id="run" class="run" type="button" disabled><span class="step">2</span>Run proposed experiments</button>
+            <p class="hint">Suggestions use observed data. Only completed simulations spend the budget.</p>
+        </div>
+        <section class="budget" aria-label="Additional experiment budget">
+            <div><span id="remaining" class="budget-number">12</span><span class="budget-label">experiments remaining</span></div>
+            <div class="budget-bar" role="progressbar" aria-label="Additional experiments used" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><div id="budget-fill" class="budget-fill"></div></div>
+            <p id="budget-detail" class="hint">Eight initial measurements + twelve available experiments.</p>
+        </section>
+        <div class="sidebar-bottom">
+            <button id="model" type="button" disabled>Open SimBiology model</button>
+            <button id="export" type="button" disabled>Export reproducible run</button>
+            <button id="reset" type="button" disabled>Reset session</button>
+        </div>
+    </aside>
+    <main class="main" aria-busy="true">
+        <section class="metrics" aria-label="Session summary">
+            <div class="metric"><div class="metric-label">Observed conditions</div><div id="observed-count" class="metric-value">—</div><div id="observed-detail" class="metric-detail">Preparing initial observations</div></div>
+            <div class="metric"><div class="metric-label">Best observed feasible signal</div><div id="best-signal" class="metric-value">—</div><div id="best-detail" class="metric-detail">Based on measured virtual experiments</div></div>
+            <div class="metric"><div class="metric-label">Proposed batch</div><div id="proposal-count" class="metric-value">0 <small>conditions</small></div><div id="proposal-detail" class="metric-detail">Suggest a batch to begin</div></div>
+        </section>
+        <div id="banner" class="banner" role="status"></div>
+        <section class="plots" aria-label="Predictions and observations">
+            <article class="panel">
+                <div class="panel-head"><h2>Predicted design space</h2><select id="map-metric" class="metric-picker" aria-label="Design-space color metric"><option value="fluorescenceMean">Fluorescence mean</option><option value="fluorescenceSD">Predictive signal SD</option></select></div>
+                <svg id="design-map" class="plot" role="img" aria-label="Predictions across promoter strength and inducer levels"></svg>
+                <div class="caption"><div id="map-detail" class="map-detail">Select a cell to inspect its prediction.</div>Hatching: less than 50% predicted growth feasibility. Circles: observed. Diamonds: proposed. Predictive SD includes observation noise.</div>
+            </article>
+            <article class="panel">
+                <div class="panel-head"><h2>Signal and growth</h2><span id="growth-pill" class="pill">Growth ≥80%</span></div>
+                <svg id="tradeoff" class="plot" role="img" aria-label="Observed fluorescence and relative growth with proposed predictions"></svg>
+                <div class="caption">Circles: observed outcomes, teal when meeting the requirement. Diamonds: proposed means. Growth is the specific growth rate at 8 hours relative to the unburdened rate.</div>
+            </article>
+        </section>
+        <section class="lower" aria-label="Proposed experiments and run history">
+            <article class="panel">
+                <div class="panel-head"><h2>Next experiments</h2><span id="proposal-label" class="pill">No proposal</span></div>
+                <div class="proposal-wrap"><table aria-label="Proposed experiment predictions"><thead><tr><th>Condition</th><th>Promoter<br>(relative)</th><th>Inducer<br>(µM)</th><th>Signal<br>(a.u.)</th><th>Growth<br>feasibility</th></tr></thead><tbody id="proposal-body"></tbody></table><div id="proposal-empty" class="empty">Choose <strong>Suggest next batch</strong>.<br>No additional experiments have been run.</div></div>
+                <p class="proposal-note">Signal: mean ± predictive SD, including observation noise. Growth feasibility is the probability that a new measurement meets the requirement.</p>
+            </article>
+            <article class="panel"><div class="panel-head"><h2>Run history</h2><span class="pill">Actual session events</span></div><ol id="events" class="events"></ol></article>
+        </section>
+        <p id="message" class="message" role="status" aria-live="polite">Preparing the virtual laboratory…</p>
+    </main>
+    <footer class="footer"><span>Simulated measurements. Fluorescence = mature reporter concentration / 1 nM.</span><span id="run-id">Repeatable session</span></footer>
+</div>
+<script>
+/* Observable presentation state. MATLAB owns all scientific calculations. */
+class Observable {
+    constructor(value) { this._value=value; this.listeners=new Set(); }
+    get value() { return this._value; }
+    set value(value) { if(this._value===value) return; this._value=value; this.listeners.forEach(listener=>listener(value)); }
+    subscribe(listener) { this.listeners.add(listener); listener(this._value); return ()=>this.listeners.delete(listener); }
+}
+const rows=value=>Array.isArray(value)?value:(value&&typeof value==='object'?[value]:[]);
+const number=(value,digits=2)=>{
+    const numeric=Number(value);if(!Number.isFinite(numeric))return '—';
+    if(numeric!==0&&Math.abs(numeric)<.01)return numeric.toPrecision(2);
+    return numeric.toLocaleString(undefined,{maximumFractionDigits:digits});
+};
+class SessionModel { constructor() { this.state=new Observable(null); } }
+class VirtualLabViewModel {
+    constructor(model,bridge) {
+        this.model=model; this.bridge=bridge; this.sequence=0; this.updateID=-1;
+        this.busy=new Observable(true); this.message=new Observable('Preparing the virtual laboratory…');
+        this.error=new Observable(false); this.mapMetric=new Observable('fluorescenceMean');
+    }
+    request(action,payload={}) {
+        this.error.value=false; this.busy.value=true;
+        this.message.value=action==='Export'?'Choose a folder for the reproducible run…':'Applying the requested action…';
+        this.bridge.sendEventToMATLAB(action,{...payload,requestId:++this.sequence});
+    }
+    accept(state) {
+        if(Number(state.updateId)<this.updateID || Number(state.requestId)<this.sequence) return false;
+        this.updateID=Number(state.updateId); this.sequence=Math.max(this.sequence,Number(state.requestId));
+        this.model.state.value=state; this.busy.value=Boolean(state.busy);
+        this.error.value=String(state.lastError||'').length>0;
+        this.message.value=state.busy?String(state.busyMessage):this.readyMessage(state);
+        return true;
+    }
+    readyMessage(state) {
+        if(String(state.lastError||'').length) return String(state.lastError)+' Completed observations are retained.';
+        if(Number(state.remainingBudget)===0) return 'Experiment budget complete. Inspect the outcomes and export the run.';
+        if(rows(state.proposal).length) return 'A proposal is ready. Running it will simulate only the remaining proposed conditions.';
+        return 'Ready. Suggest a batch, or change the growth requirement to explore a different decision.';
+    }
+    status(status) {
+        if(Number(status.requestId)<this.sequence) return;
+        this.busy.value=Boolean(status.busy); this.message.value=String(status.message||'Ready.');
+    }
+    fail(error) {
+        if(Number(error.requestId)<this.sequence && Number(error.requestId)!==0) return;
+        this.busy.value=Boolean(error.busy); this.error.value=true;
+        this.message.value=String(error.message||'The action could not finish. Existing observations are retained.');
+    }
+}
+/* The view renders backend values and sends user actions through the view-model. */
+class VirtualLabView {
+    constructor(vm) {
+        this.vm=vm; this.unsubscribers=[]; this.dom={};
+        ['growth-target','suggest','run','reset','export','model','map-metric','design-map','tradeoff','message'].forEach(id=>this.dom[id]=document.getElementById(id));
+        this.dom.suggest.addEventListener('click',()=>vm.request('Suggest'));
+        this.dom.run.addEventListener('click',()=>vm.request('Run'));
+        this.dom.reset.addEventListener('click',()=>{vm.mapMetric.value='fluorescenceMean';this.dom['map-metric'].value='fluorescenceMean';vm.request('Reset');});
+        this.dom.export.addEventListener('click',()=>vm.request('Export'));
+        this.dom.model.addEventListener('click',()=>vm.request('OpenModel'));
+        this.dom['growth-target'].addEventListener('change',()=>vm.request('SetConstraint',{threshold:Number(this.dom['growth-target'].value)}));
+        this.dom['map-metric'].addEventListener('change',()=>vm.mapMetric.value=this.dom['map-metric'].value);
+        this.unsubscribers.push(vm.model.state.subscribe(state=>{if(state)this.render(state);}));
+        this.unsubscribers.push(vm.busy.subscribe(()=>this.renderControls()));
+        this.unsubscribers.push(vm.message.subscribe(message=>this.dom.message.textContent=message));
+        this.unsubscribers.push(vm.error.subscribe(error=>this.dom.message.classList.toggle('error',error)));
+        this.unsubscribers.push(vm.mapMetric.subscribe(()=>this.renderMap(vm.model.state.value)));
+        this.resizeObserver=new ResizeObserver(()=>{this.renderMap(vm.model.state.value);this.renderTradeoff(vm.model.state.value);});
+        this.resizeObserver.observe(this.dom['design-map']); this.resizeObserver.observe(this.dom.tradeoff);
+    }
+    renderControls() {
+        const state=this.vm.model.state.value,busy=this.vm.busy.value;
+        this.dom.suggest.disabled=busy||!state||!state.canPropose;
+        this.dom.run.disabled=busy||!state||!state.canRun||!rows(state.proposal).length;
+        this.dom['growth-target'].disabled=busy||!state;
+        this.dom.export.disabled=busy||!state; this.dom.model.disabled=busy;
+        this.dom.reset.disabled=busy;
+        document.querySelector('main').setAttribute('aria-busy',String(busy));
+    }
+    render(state) {
+        const observations=rows(state.observations),proposal=rows(state.proposal),best=rows(state.bestObserved)[0];
+        this.dom['growth-target'].value=String(state.growthThreshold);
+        this.setText('remaining',state.remainingBudget);
+        this.setText('budget-detail',`${state.initialCount} initial + ${state.usedBudget} new measurements`);
+        document.getElementById('budget-fill').style.width=`${100*Number(state.usedBudget)/Math.max(1,Number(state.totalBudget))}%`;
+        document.querySelector('.budget-bar').setAttribute('aria-valuenow',String(state.usedBudget));
+        this.setText('observed-count',observations.length);
+        this.setText('observed-detail',`${state.initialCount} initial conditions; ${state.usedBudget} additional simulations`);
+        this.setText('best-signal',best?`${number(best.fluorescence)} a.u.`:'None yet');
+        this.setText('best-detail',best?`Condition ${best.candidateId} · ${number(100*best.relativeGrowth,1)}% relative growth`:'No observed condition meets the current requirement');
+        this.setText('proposal-count',`${proposal.length} conditions`);
+        this.setText('proposal-detail',proposal.length?'Predictions are awaiting simulation':'Suggestions do not spend experiments');
+        this.setText('growth-pill',`Growth ≥${number(100*state.growthThreshold,0)}%`);
+        this.setText('run-id',`Seed ${state.seed} · ${state.modelVersion}`);
+        this.setText('proposal-label',proposal.length?`Batch ${state.batchNumber}`:'No proposal');
+        const banner=document.getElementById('banner');
+        banner.classList.toggle('visible',Boolean(state.predictionStale)||String(state.lastError||'').length>0);
+        banner.textContent=state.predictionStale?'Predictions need refreshing. Completed observations are preserved.':String(state.lastError||'');
+        this.renderProposal(proposal,state); this.renderEvents(rows(state.events));
+        this.renderMap(state); this.renderTradeoff(state); this.renderControls();
+    }
+    setText(id,text) { document.getElementById(id).textContent=String(text); }
+    renderProposal(proposal,state) {
+        const body=document.getElementById('proposal-body'); body.replaceChildren();
+        document.getElementById('proposal-empty').style.display=proposal.length?'none':'block';
+        if(!proposal.length) document.getElementById('proposal-empty').textContent=Number(state.remainingBudget)===0?'The experiment budget is complete. Export the run to inspect or reproduce it.':'Choose Suggest next batch to plan up to four conditions.';
+        proposal.forEach(item=>{
+            const row=document.createElement('tr');
+            [String(item.candidateId),number(item.promoterStrength),number(item.inducerMicromolar)].forEach(value=>{const cell=document.createElement('td');cell.textContent=value;row.append(cell);});
+            const signal=document.createElement('td'); signal.textContent=number(item.fluorescenceMean);
+            const uncertainty=document.createElement('span'); uncertainty.className='subvalue'; uncertainty.textContent=`± ${number(item.fluorescenceSD)}`; signal.append(uncertainty); row.append(signal);
+            const growth=document.createElement('td'); growth.textContent=`${number(100*item.feasibilityProbability,0)}% chance`;
+            const mean=document.createElement('span'); mean.className='subvalue'; mean.textContent=`${number(100*item.growthMean,1)}% predicted growth`; growth.append(mean); row.append(growth); body.append(row);
+        });
+    }
+    renderEvents(events) {
+        const list=document.getElementById('events'); list.replaceChildren();
+        events.slice(-8).reverse().forEach(event=>{
+            const item=document.createElement('li'),sequence=document.createElement('span'),message=document.createElement('span');
+            sequence.className='event-sequence'; sequence.textContent=String(event.sequence); message.textContent=String(event.message);
+            item.append(sequence,message); list.append(item);
+        });
+    }
+    svgNode(tag,attributes={},text) {
+        const element=document.createElementNS('http://www.w3.org/2000/svg',tag);
+        Object.entries(attributes).forEach(([key,value])=>element.setAttribute(key,String(value)));
+        if(text!==undefined) element.textContent=String(text); return element;
+    }
+    color(value) {
+        const stops=[[35,62,105],[35,140,142],[236,209,95]],t=Math.max(0,Math.min(1,value)),index=t<=.5?0:1,blend=t<=.5?t*2:(t-.5)*2;
+        return `rgb(${stops[index].map((component,k)=>Math.round(component+(stops[index+1][k]-component)*blend)).join(',')})`;
+    }
+    renderMap(state) {
+        if(!state) return;
+        const svg=this.dom['design-map'],candidates=rows(state.candidates); if(!candidates.length)return;
+        const width=Math.max(300,svg.clientWidth),height=Math.max(220,svg.clientHeight),pad={left:57,right:16,top:15,bottom:62};
+        const plotWidth=width-pad.left-pad.right,plotHeight=height-pad.top-pad.bottom;
+        const promoters=[...new Set(candidates.map(item=>Number(item.promoterStrength)))].sort((a,b)=>a-b);
+        const inducers=[...new Set(candidates.map(item=>Number(item.inducerMicromolar)))].sort((a,b)=>a-b);
+        const cellWidth=plotWidth/promoters.length,cellHeight=plotHeight/inducers.length;
+        const metric=this.vm.mapMetric.value,values=candidates.map(item=>Number(item[metric])).filter(Number.isFinite);
+        const minimum=Math.min(...values),maximum=Math.max(...values),span=maximum-minimum||1;
+        svg.setAttribute('viewBox',`0 0 ${width} ${height}`); svg.replaceChildren();
+        svg.append(this.svgNode('title',{},metric==='fluorescenceSD'?'Prediction uncertainty across candidate designs':'Predicted fluorescence across candidate designs'));
+        const definitions=this.svgNode('defs'),pattern=this.svgNode('pattern',{id:'growth-hatch',width:6,height:6,patternUnits:'userSpaceOnUse'});
+        pattern.append(this.svgNode('path',{d:'M-1,1 L1,-1 M0,6 L6,0 M5,7 L7,5',stroke:'#152b39','stroke-width':1.1,'stroke-opacity':.38})); definitions.append(pattern); svg.append(definitions);
+        candidates.forEach(item=>{
+            const column=promoters.indexOf(Number(item.promoterStrength)),row=inducers.indexOf(Number(item.inducerMicromolar));
+            const x=pad.left+column*cellWidth,y=pad.top+(inducers.length-1-row)*cellHeight,value=Number(item[metric]);
+            const group=this.svgNode('g',{tabindex:0,role:'img','aria-label':`Condition ${item.candidateId}: ${number(item.fluorescenceMean)} a.u. predicted signal; ${number(100*item.feasibilityProbability,0)} percent growth feasibility`});
+            group.append(this.svgNode('rect',{x,y,width:cellWidth+.2,height:cellHeight+.2,fill:Number.isFinite(value)?this.color((value-minimum)/span):'#dce2e7',stroke:'white','stroke-width':.6}));
+            if(Number(item.feasibilityProbability)<.5)group.append(this.svgNode('rect',{x,y,width:cellWidth+.2,height:cellHeight+.2,fill:'url(#growth-hatch)'}));
+            const cx=x+cellWidth/2,cy=y+cellHeight/2,r=Math.max(2,Math.min(cellWidth,cellHeight)*.22);
+            if(item.observed)group.append(this.svgNode('circle',{cx,cy,r,fill:'none',stroke:'white','stroke-width':1.4}));
+            if(item.proposed)group.append(this.svgNode('path',{d:`M${cx},${cy-r-1} L${cx+r+1},${cy} L${cx},${cy+r+1} L${cx-r-1},${cy} Z`,fill:'white',stroke:'#553482','stroke-width':1.5}));
+            const detail=()=>this.setText('map-detail',`Condition ${item.candidateId}: ${number(item.promoterStrength)}× promoter, ${number(item.inducerMicromolar)} µM; signal ${number(item.fluorescenceMean)} ± ${number(item.fluorescenceSD)} a.u.; growth feasibility ${number(100*item.feasibilityProbability,0)}%.`);
+            group.addEventListener('mouseenter',detail); group.addEventListener('focus',detail); group.addEventListener('click',detail);
+            svg.append(group);
+        });
+        const ticks=list=>[0,Math.floor((list.length-1)/2),list.length-1].filter((item,index,all)=>all.indexOf(item)===index);
+        ticks(promoters).forEach(index=>svg.append(this.svgNode('text',{x:pad.left+(index+.5)*cellWidth,y:pad.top+plotHeight+16,'text-anchor':'middle','font-size':10,fill:'#526776'},number(promoters[index]))));
+        ticks(inducers).forEach(index=>svg.append(this.svgNode('text',{x:pad.left-8,y:pad.top+(inducers.length-index-.5)*cellHeight+3,'text-anchor':'end','font-size':10,fill:'#526776'},number(inducers[index]))));
+        svg.append(this.svgNode('text',{x:pad.left+plotWidth/2,y:height-29,'text-anchor':'middle','font-size':11,fill:'#163047'},'Promoter strength (relative)'));
+        svg.append(this.svgNode('text',{x:15,y:pad.top+plotHeight/2,transform:`rotate(-90 15 ${pad.top+plotHeight/2})`,'text-anchor':'middle','font-size':11,fill:'#163047'},'Inducer (µM)'));
+        const legendWidth=Math.min(130,plotWidth*.42),legendX=pad.left+plotWidth-legendWidth;
+        for(let index=0;index<40;index++)svg.append(this.svgNode('rect',{x:legendX+index*legendWidth/40,y:height-15,width:legendWidth/40+.2,height:6,fill:this.color(index/39)}));
+        svg.append(this.svgNode('text',{x:pad.left,y:height-9,'font-size':9,fill:'#526776'},metric==='fluorescenceSD'?'Predictive SD (a.u.)':'Fluorescence (a.u.)'));
+        svg.append(this.svgNode('text',{x:legendX-5,y:height-9,'text-anchor':'end','font-size':9,fill:'#526776'},number(minimum,1)));
+        svg.append(this.svgNode('text',{x:legendX+legendWidth,y:height-19,'text-anchor':'end','font-size':9,fill:'#526776'},number(maximum,1)));
+    }
+    renderTradeoff(state) {
+        if(!state)return;
+        const svg=this.dom.tradeoff,observations=rows(state.observations),proposal=rows(state.proposal);
+        const width=Math.max(300,svg.clientWidth),height=Math.max(220,svg.clientHeight),pad={left:59,right:17,top:20,bottom:43};
+        const plotWidth=width-pad.left-pad.right,plotHeight=height-pad.top-pad.bottom;
+        const growthValues=[...observations.map(item=>Number(item.relativeGrowth)),...proposal.map(item=>Number(item.growthMean))];
+        const signalValues=[...observations.map(item=>Number(item.fluorescence)),...proposal.map(item=>Number(item.fluorescenceMean))];
+        const xMin=Math.max(0,Math.floor(Math.min(.75,...growthValues)*10)/10-.05),xMax=Math.max(1.03,...growthValues)*1.02;
+        const yMax=Math.max(1,...signalValues)*1.15;
+        const x=value=>pad.left+(value-xMin)/(xMax-xMin)*plotWidth,y=value=>pad.top+(1-value/yMax)*plotHeight;
+        svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.replaceChildren();svg.append(this.svgNode('title',{},'Observed outcomes and proposed means relative to the growth requirement'));
+        const thresholdX=x(Number(state.growthThreshold));
+        svg.append(this.svgNode('rect',{x:thresholdX,y:pad.top,width:Math.max(0,width-pad.right-thresholdX),height:plotHeight,fill:'#eff8f4'}));
+        for(let index=0;index<=4;index++) {
+            const value=index*yMax/4;
+            svg.append(this.svgNode('line',{x1:pad.left,y1:y(value),x2:width-pad.right,y2:y(value),stroke:'#e1e8ed'}));
+            svg.append(this.svgNode('text',{x:pad.left-7,y:y(value)+3,'text-anchor':'end','font-size':10,fill:'#526776'},number(value,value<10?2:0)));
+        }
+        for(let value=Math.ceil(xMin*10)/10;value<=xMax;value+=.1) {
+            svg.append(this.svgNode('text',{x:x(value),y:height-pad.bottom+16,'text-anchor':'middle','font-size':10,fill:'#526776'},`${number(value*100,0)}%`));
+        }
+        svg.append(this.svgNode('line',{x1:thresholdX,y1:pad.top,x2:thresholdX,y2:height-pad.bottom,stroke:'#477963','stroke-width':1.4,'stroke-dasharray':'4 3'}));
+        svg.append(this.svgNode('text',{x:thresholdX+4,y:pad.top-7,'font-size':9,fill:'#477963'},'growth target'));
+        proposal.forEach(item=>{
+            const cx=x(Number(item.growthMean)),cy=y(Number(item.fluorescenceMean)),r=5;
+            const point=this.svgNode('path',{d:`M${cx},${cy-r} L${cx+r},${cy} L${cx},${cy+r} L${cx-r},${cy} Z`,fill:'white',stroke:'#7556a5','stroke-width':1.6});
+            point.append(this.svgNode('title',{},`Proposed ${item.candidateId}: predicted ${number(item.fluorescenceMean)} a.u.; ${number(100*item.growthMean,1)}% growth`));svg.append(point);
+        });
+        const best=rows(state.bestObserved)[0];
+        observations.forEach(item=>{
+            const cx=x(Number(item.relativeGrowth)),cy=y(Number(item.fluorescence)),isBest=best&&String(best.candidateId)===String(item.candidateId);
+            const color=item.observedFeasible?'#14746f':'#b3752b';
+            const point=this.svgNode('circle',{cx,cy,r:Number(item.batch)>0?5.3:4.1,fill:color,stroke:'white','stroke-width':1.1,opacity:Number(item.batch)>0?1:.67});
+            point.append(this.svgNode('title',{},`Observed ${item.candidateId}: ${number(item.fluorescence)} a.u.; ${number(100*item.relativeGrowth,1)}% growth; ${item.observedFeasible?'meets':'below'} requirement`));svg.append(point);
+            if(isBest)svg.append(this.svgNode('circle',{cx,cy,r:8,fill:'none',stroke:'#173247','stroke-width':1.1}));
+        });
+        svg.append(this.svgNode('text',{x:pad.left+plotWidth/2,y:height-7,'text-anchor':'middle','font-size':11,fill:'#163047'},'Relative growth'));
+        svg.append(this.svgNode('text',{x:14,y:pad.top+plotHeight/2,transform:`rotate(-90 14 ${pad.top+plotHeight/2})`,'text-anchor':'middle','font-size':11,fill:'#163047'},'Fluorescence (a.u.)'));
+    }
+    destroy() { this.resizeObserver.disconnect();this.unsubscribers.forEach(unsubscribe=>unsubscribe()); }
+}
+function setup(htmlComponent) {
+    if(window.virtualLabView)window.virtualLabView.destroy();
+    const model=new SessionModel(),vm=new VirtualLabViewModel(model,htmlComponent),view=new VirtualLabView(vm);
+    window.virtualLabView=view;
+    htmlComponent.addEventListener('State',event=>{
+        try { if(vm.accept(event.Data))htmlComponent.sendEventToMATLAB('Rendered',{requestId:Number(event.Data.requestId),updateId:Number(event.Data.updateId)}); }
+        catch(error) { vm.fail({requestId:vm.sequence,message:`The result could not be displayed: ${error.message}`}); }
+    });
+    htmlComponent.addEventListener('Status',event=>vm.status(event.Data));
+    htmlComponent.addEventListener('Error',event=>vm.fail(event.Data));
+    htmlComponent.addEventListener('ExportComplete',event=>{
+        if(Number(event.Data.requestId)<vm.sequence)return;
+        vm.busy.value=false;vm.message.value=event.Data.saved?'The observed data and reproducible run were exported.':'Export cancelled; the session is unchanged.';
+    });
+    window.addEventListener('beforeunload',()=>view.destroy(),{once:true});
+    vm.request('Initialize');
+}
+</script>
+</body>
+</html>

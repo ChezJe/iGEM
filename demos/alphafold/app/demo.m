@@ -4,7 +4,7 @@ demoFolder = fileparts(which("launchPetaseDemo"));
 if isempty(demoFolder)
     candidates = [fullfile(pwd,"demos","alphafold"), fullfile(pwd,".."), pwd];
     demoFolder = candidates(find(isfile(fullfile(candidates,"launchPetaseDemo.m")),1));
-    assert(~isempty(demoFolder), "Open this script from the repository or its great-demo folder.");
+    assert(~isempty(demoFolder), "Open this script from the repository or its app folder.");
     addpath(demoFolder);
 end
 launchPetaseDemo;

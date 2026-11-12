@@ -2,7 +2,7 @@
 
 Find cells in a reference channel and measure fluorescence in a separate reporter channel. This seven-minute demo for iGEM teams shows why counting cells and quantifying expression are different tasks.
 
-[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/microscopy/great-demo/demo.m)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/microscopy/app/demo.m)
 
 The badge opens the launcher. Select **Run** to open the app. MATLAB Online requires a MathWorks Account and access to MATLAB and Image Processing Toolbox.
 
@@ -15,7 +15,7 @@ Use **MATLAB R2026b or later** with **Image Processing Toolbox**. The app uses t
 From the repository root:
 
 ```matlab
-run("demos/microscopy/great-demo/demo.m")
+run("demos/microscopy/app/demo.m")
 ```
 
 The app starts with a dense, induced field: **72 detected cells**, including **two saturated cells** that are excluded from expression summaries. Two border objects are excluded. Turning **Separate touching cells** off produces 36 merged objects.
@@ -50,8 +50,8 @@ Real microscopy data will require representative manual annotations, acquisition
 
 | Path | Purpose |
 |---|---|
-| `great-demo/demo.m` | Launcher used by the Online badge. |
-| `great-demo/MicroscopyExplorer.m` and `.xml` | Editable App Designer application. |
+| `app/demo.m` | Launcher used by the Online badge. |
+| `app/MicroscopyExplorer.m` and `.xml` | Editable App Designer application. |
 | `walkthrough/microscopyWalkthrough.m` | Plain-text Live Script explaining the analysis. |
 | `data/microscopyFields.mat` | Four bundled image fields, ground truth, and acquisition metadata. |
 | `functions/generateMicroscopyData.m` | Seeded synthetic image generator. |

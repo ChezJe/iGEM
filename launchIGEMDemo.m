@@ -20,6 +20,6 @@ switch name
     case "biosensor"
         biosensorApp = BiosensorExplorer; %#ok<NASGU>
     case "agentic"
-        run(fullfile(folder,"great-demo","demo.m"));
+        virtualLabApp = VirtualLabExplorer; %#ok<NASGU>
 end
 end

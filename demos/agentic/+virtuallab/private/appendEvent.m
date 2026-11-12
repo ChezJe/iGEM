@@ -1,0 +1,6 @@
+function state = appendEvent(state, type, message, candidateID)
+    event = table(height(state.Events)+1, string(type), string(message), ...
+        state.BatchNumber, candidateID, remainingBudget(state), state.GrowthThreshold, ...
+        VariableNames=state.Events.Properties.VariableNames);
+    state.Events = [state.Events; event];
+end

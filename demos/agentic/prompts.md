@@ -1,19 +1,25 @@
-# Claude presenter prompts
+# Operate the Virtual Lab with Claude
 
-Use your existing Claude client connected to MATLAB. Start a fresh working copy in `live-build-start/`; keep the prepared reference in `great-demo/` available for recovery. No installation or API key is part of this demo.
+Use an existing Claude client with a MATLAB connection. Open this demo folder in the client's workspace. The app methods and the `virtuallab` package run scientific calculations locally in MATLAB; no new API or external software is needed for virtual experiments.
 
-## 1. Inspect and propose
+## 1. Inspect the state and explain the objective
 
-> Inspect `../great-demo/data/plateReader.csv` in MATLAB. It contains synthetic OD600 measurements. Explain the schema, identify blank and culture wells, and propose how to compare growth between constructs. Do not edit the supplied data. Make the time units, blank correction, replicate handling, and fitting assumptions explicit.
+> Use MATLAB to open `VirtualLabExplorer` in a variable named `lab`, or reuse that variable if the app is already running. Call `lab.getState()` and inspect the observations, growth requirement, candidate factors, and remaining budget. Explain what is known from completed experiments and what is only predicted. The objective is high reporter signal while preserving at least 80% of reference growth. Use the app's public methods for experiment selection and execution.
 
-## 2. Implement and execute
+## 2. Propose and run a batch
 
-> Create a plain-text MATLAB Live Script named `claudeGrowthAnalysis.m` in this folder. Subtract the mean blank at each matching time. Fit log corrected OD600 separately for every well using observations between 0.05 and 0.30 and at least five points. Report rate in inverse hours, doubling time in hours, fit intervals, and insufficient windows. Preserve nonpositive measurements in the inspected data and exclude them from logarithms. Show the selected observations and compare all replicates. Run the script with MATLAB and inspect the results.
+> Call `lab.proposeBatch()`. Summarize the proposed conditions, predicted signal and growth, and uncertainty. Explain why the proposal is worth evaluating. Call `lab.runBatch()` to execute those virtual experiments through SimBiology. Inspect `lab.getState()` afterward and report which outcomes meet the growth requirement and how many experiments remain. Do not count a proposal as an executed experiment.
 
-## 3. Check the result
+## 3. Change the requirement and adapt
 
-> Check the script with MATLAB Code Analyzer. Verify the results are unchanged when CSV rows are reordered. Confirm that removing blank wells raises a clear error and that an acquisition too short to contain an exponential window is flagged. Compare estimated rates against `../great-demo/data/generationTruth.csv` only now, as a verification step. Explain what these checks establish and what they do not establish.
+> Raise the minimum growth requirement to 90% with `lab.setGrowthThreshold(0.9)`. Confirm that completed observations and the remaining budget are preserved and that the previous proposal is no longer current. Request a new proposal. Explain how the tighter requirement changes the recommendation, then run the next batch if budget remains.
+
+## 4. Inspect the model and export the evidence
+
+> Use `lab.openModel()` to open the underlying SimBiology model. Describe the reporter-expression and growth-burden coupling, its units, and its limitations. Inspect the final experiment record and call `lab.exportRun()` to save it. Summarize the best observed feasible design, any constraint violations, and the uncertainty that remains. Clearly distinguish simulated outcomes from laboratory evidence.
 
 ## Recovery
 
-If the connection or generation fails, state that you are switching to the prepared result, then run `recovery.m`. Do not present the prepared script as a transcript of a live Claude run. The repository does not contain a fabricated agent-session recording.
+If the connected session is unavailable, run `claude-session/recovery.m`. It executes the prepared MATLAB workflow using the same model and selection functions. Identify it as a scripted demonstration rather than a live Claude session.
+
+For a smaller introductory coding task, use [the growth-analysis example](introduction/README.md) and its prompts.

@@ -1,6 +1,6 @@
 # Explore Methyl Salicylate Production with SimBiology
 
-[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/simbiology/great-demo/demo.m)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/simbiology/app/demo.m)
 
 Explore how pathway parameters affect simulated methyl salicylate production. This seven-minute demonstration uses a SimBiology model, its diagram, a parameter-slider program, and normalized local sensitivity analysis.
 
@@ -10,13 +10,13 @@ The badge opens the launcher; run its first section to open Model Analyzer. Sign
 
 | File / Directory | Description |
 |---|---|
-| `great-demo/demo.m` | Live Script launcher and Model Builder entry |
-| `great-demo/openMeSDemo.m` | Relocatable Model Analyzer launcher |
-| `great-demo/openMeSModel.m` | Relocatable Model Builder launcher |
-| `great-demo/MeS_Production.sbproj` | Pathway model, diagram, analysis tasks, and saved results |
-| `great-demo/baselineResults.mat` | Recomputed numerical checkpoint |
-| `great-demo/simulateMeS.m` | Reproducible baseline, parameter change, and sensitivity computation |
-| `great-demo/inspectProduction.m` | Supporting quantitative Live Script |
+| `app/demo.m` | Live Script launcher and Model Builder entry |
+| `app/openMeSDemo.m` | Relocatable Model Analyzer launcher |
+| `app/openMeSModel.m` | Relocatable Model Builder launcher |
+| `app/MeS_Production.sbproj` | Pathway model, diagram, analysis tasks, and saved results |
+| `app/baselineResults.mat` | Recomputed numerical checkpoint |
+| `app/simulateMeS.m` | Reproducible baseline, parameter change, and sensitivity computation |
+| `app/inspectProduction.m` | Supporting quantitative Live Script |
 
 ## Presentation Flow
 
@@ -30,7 +30,7 @@ The badge opens the launcher; run its first section to open Model Analyzer. Sign
 ## Setup Instructions
 
 1. Use MATLAB R2026b with SimBiology.
-2. Open `great-demo/demo.m` and run its first section, or run the file by full path.
+2. Open `app/demo.m` and run its first section, or run the file by full path.
 3. Call `openMeSModel` to open the saved diagram in Model Builder. Keep the displayed project changes unsaved during rehearsal unless you intend to retain them.
 4. Run `inspectProduction.m` for the supporting numerical comparison. It recomputes baseline production, a parameter change, and local sensitivity.
 

@@ -1,6 +1,6 @@
 # PETase: inspect AlphaFold prediction confidence
 
-[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/alphafold/great-demo/demo.m)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ChezJe/iGEM&file=demos/alphafold/app/demo.m)
 
 Explore a PETase protein prediction in **Biopipeline Designer**. Five connected blocks retrieve or read a prediction, extract one confidence observation per residue, and display a rotatable structure and confidence profile. Designed for a seven-minute iGEM walkthrough.
 
@@ -12,7 +12,7 @@ The badge opens the launcher. Select **Run** to start. MATLAB Online requires a 
 
 Requires **MATLAB R2026b** and **Bioinformatics Toolbox**. No additional programs, containers, or API keys are needed. Cached mode works offline.
 
-1. Open [`great-demo/demo.m`](great-demo/demo.m) and click **Run**. The completed figure and saved pipeline open.
+1. Open [`app/demo.m`](app/demo.m) and click **Run**. The completed figure and saved pipeline open.
 2. In Biopipeline Designer, click **Run** to execute all five blocks.
 3. Select **ConfidenceThreshold**. In its input values, change **Threshold** from `70` to `50`, then run again.
 4. To show retrieval, select **MetadataAndCache**, change **Mode** from `"cached"` to `"live"`, and run. Only the public AlphaFold DB service is contacted.
@@ -47,7 +47,7 @@ To recover during a presentation, return **Mode** to `"cached"`, **Threshold** t
 
 | File or folder | Purpose |
 |---|---|
-| [`great-demo/demo.m`](great-demo/demo.m) | MATLAB Online entry and app launcher |
+| [`app/demo.m`](app/demo.m) | MATLAB Online entry and app launcher |
 | [`petaseConfidence.plprj`](petaseConfidence.plprj) | Saved five-block native pipeline |
 | [`launchPetaseDemo.m`](launchPetaseDemo.m) | Reproducible result and app launch |
 | [`createPetasePipeline.m`](createPetasePipeline.m) | Build the pipeline from MATLAB code |
